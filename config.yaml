@@ -1,0 +1,92 @@
+# 模型配置 - 硅基流动 SiliconFlow
+model:
+  # ========================================
+  # 快速切换：修改此处即可切换不同的 LLM 服务
+  # 可选值: siliconflow, anthropic, anthropic-env
+  # ========================================
+  active: "siliconflow"
+
+  # 多个服务提供者配置
+  providers:
+    # 硅基流动 - GLM-4.6 (当前激活)
+    siliconflow:
+      description: "硅基流动 - GLM-4.6"
+      provider: "openai"  # OpenAI 兼容接口
+      model_name: "zai-org/GLM-4.6"  # GLM-4.6 模型
+      api_key: "sk-xjqbkwtceauwrnexnjaejyqwtduwibrkawswhfzsxllumoiw"
+      base_url: "https://api.siliconflow.cn/v1"
+      temperature: 0.1
+      max_tokens: 4096
+
+    # Anthropic 官方 API
+    anthropic:
+      description: "Anthropic Claude - 官方 API"
+      provider: "anthropic"
+      model_name: "claude-3-5-sonnet-20241022"
+      api_key: "sk-oPSDKV7xHzeNDDdc1gRp41y5pUMxcHR9sexl3usrbELi6Be1"
+      base_url: "https://anyrouter.top"
+      temperature: 0.1
+      max_tokens: 4096
+
+    # 使用环境变量（更安全）
+    anthropic-env:
+      description: "Anthropic Claude - 使用环境变量"
+      provider: "anthropic"
+      model_name: "claude-3-5-sonnet-20241022"
+      api_key: "${ANTHROPIC_AUTH_TOKEN}"
+      base_url: "${ANTHROPIC_BASE_URL}"
+      temperature: 0.1
+      max_tokens: 4096
+
+    # 备用配置示例 - 如需使用环境变量
+    anthropic_env:
+      description: "Anthropic Claude - 使用环境变量"
+      provider: "openai"
+      model_name: "claude-3-5-sonnet-20241022"
+      api_key: "${ANTHROPIC_AUTH_TOKEN}"
+      base_url: "${ANTHROPIC_BASE_URL}/v1"
+      temperature: 0.1
+      max_tokens: 4096
+
+# Excel 配置
+excel:
+  # 预览时显示的最大行数
+  max_preview_rows: 20
+  # 工具返回结果的默认行数限制
+  default_result_limit: 20
+  # 最大结果行数限制
+  max_result_limit: 1000
+
+# 服务配置
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+# Embedding 模型配置（用于知识库向量化）
+embedding:
+  # 如果 anyrouter.top 支持 embedding，可以配置这里
+  # 否则可以使用其他 embedding 服务
+  active: "default"
+
+  providers:
+    default:
+      description: "默认 Embedding 服务"
+      model: "text-embedding-ada-002"  # 根据实际支持的模型调整
+      dims: 1536
+      api_url: "https://anyrouter.top/v1"
+      api_key: "sk-oPSDKV7xHzeNDDdc1gRp41y5pUMxcHR9sexl3usrbELi6Be1"
+
+# 知识库配置
+knowledge_base:
+  # 是否启用知识库
+  enabled: true
+  # 知识条目目录
+  knowledge_dir: "knowledge"
+  # 向量库持久化路径
+  vector_db_path: ".vector_db"
+  # 检索返回条数
+  top_k: 3
+  # 相似度阈值 (0-1)
+  similarity_threshold: 0.7
+  # 是否自动提取元数据
+  auto_extract_metadata: true
