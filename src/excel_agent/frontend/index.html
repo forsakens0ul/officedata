@@ -1904,7 +1904,7 @@
         async function handleFiles(files) {
             const validFiles = Array.from(files).filter(f => {
                 const ext = '.' + f.name.split('.').pop().toLowerCase();
-                return ['.xlsx', '.xls', '.xlsm'].includes(ext);
+                return ['.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.docx', '.doc'].includes(ext);
             });
 
             if (validFiles.length === 0) return;
