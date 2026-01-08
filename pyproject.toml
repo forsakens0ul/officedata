@@ -1,7 +1,7 @@
 [project]
 name = "excel-agent"
-version = "0.1.0"
-description = "Excel 智能问数 Agent - 基于 LangGraph 的 Excel 数据分析助手"
+version = "1.0.0"
+description = "OfficeMind - 基于 LangGraph 的 Office 文档智能数据分析助手（支持 Excel、PowerPoint、Word）"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -18,6 +18,8 @@ dependencies = [
     "uvicorn>=0.32.0",
     "python-multipart>=0.0.9",
     "chromadb>=0.4.0",
+    "python-pptx>=0.6.23",
+    "python-docx>=1.1.0",
 ]
 
 [project.scripts]

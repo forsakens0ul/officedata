@@ -61,11 +61,23 @@ class ModelConfig(BaseModel):
         }
 
 
-class ExcelConfig(BaseModel):
-    """Excel 配置"""
+class DocumentConfig(BaseModel):
+    """文档配置（支持 Excel、PowerPoint、Word）"""
     max_preview_rows: int = 5
     default_result_limit: int = 20
     max_result_limit: int = 1000
+
+    # PowerPoint 特定配置
+    pptx_extract_notes: bool = True
+    pptx_extract_tables: bool = True
+
+    # Word 特定配置
+    docx_extract_tables: bool = True
+    docx_preserve_formatting: bool = True
+
+
+# 向后兼容别名
+ExcelConfig = DocumentConfig
 
 
 class ServerConfig(BaseModel):
@@ -133,7 +145,8 @@ class KnowledgeBaseConfig(BaseModel):
 class AppConfig(BaseModel):
     """应用配置"""
     model: ModelConfig = Field(default_factory=ModelConfig)
-    excel: ExcelConfig = Field(default_factory=ExcelConfig)
+    document: DocumentConfig = Field(default_factory=DocumentConfig)
+    excel: DocumentConfig = Field(default_factory=DocumentConfig)  # 向后兼容别名
     server: ServerConfig = Field(default_factory=ServerConfig)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)
     knowledge_base: KnowledgeBaseConfig = Field(default_factory=KnowledgeBaseConfig)

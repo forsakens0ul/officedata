@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
+from .base_loader import BaseDocumentLoader
 from .config import get_config
 
 
@@ -25,27 +26,16 @@ class TableInfo:
     source_tables: List[str] = field(default_factory=list)  # 源表名称列表
 
 
-class ExcelLoader:
+class ExcelLoader(BaseDocumentLoader):
     """Excel 文件加载器"""
-    
+
+    SUPPORTED_EXTENSIONS = ['.xlsx', '.xls', '.xlsm']
+
     def __init__(self):
-        self._df: Optional[pd.DataFrame] = None
-        self._file_path: Optional[str] = None
+        super().__init__()
         self._sheet_name: Optional[str] = None
         self._all_sheets: List[str] = []
-    
-    @property
-    def is_loaded(self) -> bool:
-        """是否已加载文件"""
-        return self._df is not None
-    
-    @property
-    def dataframe(self) -> pd.DataFrame:
-        """获取 DataFrame"""
-        if self._df is None:
-            raise ValueError("未加载 Excel 文件")
-        return self._df
-    
+
     def load(self, file_path: str, sheet_name: Optional[str] = None) -> Dict[str, Any]:
         """加载 Excel 文件
         

@@ -49,9 +49,9 @@ def json_dumps(obj, **kwargs):
 
 # 创建 FastAPI 应用
 app = FastAPI(
-    title="Excel 智能问数 Agent",
-    description="基于 LangGraph 的 Excel 数据分析助手 API（支持多表）",
-    version="0.2.0",
+    title="Office Suite 数据分析工具",
+    description="基于 LangGraph 的 Office 文档智能分析助手 API（支持 Excel、PowerPoint、Word）",
+    version="1.0.0",
 )
 
 # 添加 CORS 中间件
@@ -77,13 +77,14 @@ class LoadExcelRequest(BaseModel):
 
 
 class LoadExcelResponse(BaseModel):
-    """加载 Excel 响应"""
+    """加载文档响应（支持 Excel、PowerPoint、Word）"""
     success: bool
     message: str
     table_id: Optional[str] = None
+    doc_type: Optional[str] = None  # "excel", "pptx", "docx"
     structure: Optional[Dict[str, Any]] = None
     preview: Optional[Dict[str, Any]] = None
-    tables: Optional[List[Dict[str, Any]]] = None  # 所有表列表
+    tables: Optional[List[Dict[str, Any]]] = None  # 所有文档列表
 
 
 class ChatRequest(BaseModel):
@@ -335,11 +336,16 @@ async def load_excel(request: LoadExcelRequest):
         
         # 重置图以使用新的 Excel 数据
         reset_graph()
-        
+
+        # 获取文档类型
+        table_info = loader.get_table_info(table_id)
+        doc_type = table_info.doc_type if table_info else "excel"
+
         return LoadExcelResponse(
             success=True,
-            message=f"成功加载 Excel 文件: {request.file_path}",
+            message=f"成功加载文件: {request.file_path}",
             table_id=table_id,
+            doc_type=doc_type,
             structure=structure,
             preview=preview,
             tables=loader.list_tables(),
@@ -360,8 +366,12 @@ async def upload_excel(file: UploadFile = File(...), sheet_name: Optional[str] =
     
     # 检查文件扩展名
     suffix = Path(file.filename).suffix.lower()
-    if suffix not in ['.xlsx', '.xls', '.xlsm']:
-        raise HTTPException(status_code=400, detail=f"不支持的文件格式: {suffix}")
+    supported_extensions = ['.xlsx', '.xls', '.xlsm', '.pptx', '.ppt', '.docx', '.doc']
+    if suffix not in supported_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"不支持的文件格式: {suffix}。支持的格式: {', '.join(supported_extensions)}"
+        )
     
     try:
         # 保存到临时文件
@@ -385,11 +395,15 @@ async def upload_excel(file: UploadFile = File(...), sheet_name: Optional[str] =
         
         # 重置图
         reset_graph()
-        
+
+        # 获取文档类型
+        doc_type = table_info.doc_type if table_info else "excel"
+
         return LoadExcelResponse(
             success=True,
-            message=f"成功上传并加载 Excel 文件: {file.filename}",
+            message=f"成功上传并加载文件: {file.filename}",
             table_id=table_id,
+            doc_type=doc_type,
             structure=structure,
             preview=preview,
             tables=loader.list_tables(),
