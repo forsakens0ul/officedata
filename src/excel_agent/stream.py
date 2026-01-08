@@ -9,7 +9,7 @@ from langchain_anthropic import ChatAnthropic
 from langgraph.prebuilt import create_react_agent
 
 from .config import get_config
-from .excel_loader import get_loader
+from .document_loader import get_loader
 from .knowledge_base import get_knowledge_base, format_knowledge_context
 from .tools import ALL_TOOLS
 

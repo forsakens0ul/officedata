@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from langchain_core.tools import tool
 
-from .excel_loader import get_loader
+from .document_loader import get_loader
 from .config import get_config
 
 

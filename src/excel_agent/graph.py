@@ -10,7 +10,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
 from .config import get_config
-from .excel_loader import get_loader
+from .document_loader import get_loader
 from .prompts import SYSTEM_PROMPT
 from .tools import ALL_TOOLS
 

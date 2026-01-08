@@ -80,7 +80,7 @@ def main():
 def run_cli(excel_path: str = None):
     """运行命令行交互模式"""
     from langchain_core.messages import HumanMessage, AIMessage
-    from .excel_loader import get_loader
+    from .document_loader import get_loader
     from .graph import get_graph
     
     print("=" * 50)

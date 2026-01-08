@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime, date
+import math
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,12 +14,34 @@ from pydantic import BaseModel
 from langchain_core.messages import HumanMessage, AIMessage
 
 from .config import get_config, load_config, set_config
-from .excel_loader import get_loader, reset_loader
+from .document_loader import get_loader, reset_loader
 from .graph import get_graph, reset_graph
 from .stream import stream_chat
 
 import tempfile
 import os
+
+
+def clean_json_data(obj):
+    """清理数据中的 NaN、Inf 值，使其可以 JSON 序列化"""
+    if isinstance(obj, dict):
+        return {k: clean_json_data(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [clean_json_data(item) for item in obj]
+    elif isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    elif hasattr(obj, 'item'):  # numpy types
+        val = obj.item()
+        if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+            return None
+        return val
+    elif hasattr(obj, 'isoformat'):  # datetime
+        return obj.isoformat()
+    elif str(obj) in ['NaT', '<NA>']:
+        return None
+    return obj
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -151,25 +174,25 @@ async def get_status():
     
     # 获取所有表信息
     tables = loader.list_tables()
-    
+
     # 获取活跃表详情
     active_loader = loader.get_active_loader()
     active_table = None
     if active_loader:
         structure = active_loader.get_structure()
         active_table = {
-            "file_path": structure["file_path"],
-            "sheet_name": structure["sheet_name"],
-            "total_rows": structure["total_rows"],
-            "total_columns": structure["total_columns"],
-            "columns": structure["columns"],
+            "file_path": structure.get("file_path"),
+            "sheet_name": structure.get("sheet_name"),
+            "total_rows": structure.get("total_rows"),
+            "total_columns": structure.get("total_columns"),
+            "columns": structure.get("columns"),
         }
-    
+
     return StatusResponse(
         excel_loaded=True,
-        tables=tables,
+        tables=clean_json_data(tables),
         active_table_id=loader.active_table_id,
-        active_table=active_table,
+        active_table=clean_json_data(active_table),
     )
 
 
@@ -179,7 +202,7 @@ async def list_tables():
     loader = get_loader()
     return {
         "success": True,
-        "tables": loader.list_tables(),
+        "tables": clean_json_data(loader.list_tables()),
         "active_table_id": loader.active_table_id,
     }
 
@@ -188,25 +211,28 @@ async def list_tables():
 async def set_active_table(request: SetActiveTableRequest):
     """设置当前活跃表"""
     loader = get_loader()
-    
+
     if not loader.set_active_table(request.table_id):
         raise HTTPException(status_code=404, detail=f"表不存在: {request.table_id}")
-    
+
     # 重置图以使用新的活跃表数据
     reset_graph()
-    
+
     # 获取新活跃表的信息
     active_loader = loader.get_active_loader()
     structure = active_loader.get_structure() if active_loader else None
     preview = active_loader.get_preview() if active_loader else None
-    
-    return {
+
+    # 清理数据中的 NaN/Inf 值
+    response_data = {
         "success": True,
         "message": f"已切换到表: {request.table_id}",
-        "structure": structure,
-        "preview": preview,
-        "tables": loader.list_tables(),
+        "structure": clean_json_data(structure),
+        "preview": clean_json_data(preview),
+        "tables": clean_json_data(loader.list_tables()),
     }
+
+    return response_data
 
 
 @app.delete("/tables/{table_id}")
@@ -346,9 +372,9 @@ async def load_excel(request: LoadExcelRequest):
             message=f"成功加载文件: {request.file_path}",
             table_id=table_id,
             doc_type=doc_type,
-            structure=structure,
-            preview=preview,
-            tables=loader.list_tables(),
+            structure=clean_json_data(structure),
+            preview=clean_json_data(preview),
+            tables=clean_json_data(loader.list_tables()),
         )
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -404,9 +430,9 @@ async def upload_excel(file: UploadFile = File(...), sheet_name: Optional[str] =
             message=f"成功上传并加载文件: {file.filename}",
             table_id=table_id,
             doc_type=doc_type,
-            structure=structure,
-            preview=preview,
-            tables=loader.list_tables(),
+            structure=clean_json_data(structure),
+            preview=clean_json_data(preview),
+            tables=clean_json_data(loader.list_tables()),
         )
     except Exception as e:
         # 清理临时文件

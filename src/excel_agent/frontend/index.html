@@ -1956,10 +1956,28 @@
             tables.forEach(table => {
                 tableNames[table.id] = table.filename;
                 const isSelected = selectedTableIds.includes(table.id);
-                const icon = table.is_joined ? '🔗' : '📊';
+
+                // 根据文档类型显示不同图标
+                let icon = '📊';  // 默认 Excel
+                let docTypeLabel = '';
+
+                if (table.is_joined) {
+                    icon = '🔗';
+                    docTypeLabel = '连接表';
+                } else if (table.doc_type === 'pptx') {
+                    icon = '📑';
+                    docTypeLabel = 'PPT';
+                } else if (table.doc_type === 'docx') {
+                    icon = '📄';
+                    docTypeLabel = 'Word';
+                } else {
+                    icon = '📊';
+                    docTypeLabel = 'Excel';
+                }
+
                 const tooltip = table.is_joined && table.source_tables
                     ? `连接表：${table.source_tables.join(' + ')}`
-                    : table.filename;
+                    : `${docTypeLabel} - ${table.filename}`;
 
                 const item = document.createElement('div');
                 item.className = `table-item${table.is_active ? ' active' : ''}${isSelected ? ' selected' : ''}`;
@@ -1970,7 +1988,7 @@
                         <span class="table-icon">${icon}</span>
                         <div class="table-info">
                             <div class="table-name" title="${tooltip}">${table.filename}</div>
-                            <div class="table-meta">${table.total_rows}行 × ${table.total_columns}列</div>
+                            <div class="table-meta">${docTypeLabel} • ${table.total_rows}行 × ${table.total_columns}列</div>
                         </div>
                     </div>
                     <button class="table-delete" title="删除">×</button>
